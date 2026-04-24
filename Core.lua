@@ -468,6 +468,20 @@ function BlacklistWarden:IsPlayerInList(name)
     end
 end
 
+-- Checks the tooltip type and retrieves the unit and guid if it's a unit tooltip, otherwise returns nil
+function BlacklistWarden:GetUnitFromTooltip(tooltip)
+    if not tooltip:IsTooltipType(Enum.TooltipDataType.Unit) then
+        return
+    end
+    local tooltipData = tooltip:GetPrimaryTooltipData()
+    local guid = tooltipData.guid
+    if issecretvalue(guid) or not guid then
+        return
+    end
+    local unit = UnitTokenFromGUID(guid)
+    return nil, unit, guid
+end
+
 --Tooltip module
 do
     --Add info on tooltip for blacklisted players
@@ -485,9 +499,9 @@ do
     local function OnTooltipSetUnit(tooltip, data)
         if tooltip ~= GameTooltip then return end
 
-        local _, unit = tooltip:GetUnit()
+        local _, unit = BlacklistWarden:GetUnitFromTooltip(tooltip)
 
-        if(issecretvalue(unit))then return end
+        if not unit or issecretvalue(unit) then return end
 
         if unit and UnitIsPlayer(unit) and not UnitIsUnit(unit, "player") then
             local name, realm = UnitName(unit)
